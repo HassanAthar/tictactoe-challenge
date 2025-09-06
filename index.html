@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Can You Beat This AI?</title>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: #121212;
+      color: white;
+      text-align: center;
+      padding: 20px;
+    }
+    h1 { color: #00ff9d; }
+    p { font-size: 18px; }
+    .board {
+      display: grid;
+      grid-template-columns: repeat(3, 100px);
+      grid-gap: 10px;
+      margin: 30px auto;
+      width: 320px;
+    }
+    .cell {
+      width: 100px;
+      height: 100px;
+      background: #1e1e1e;
+      border: 2px solid #00ff9d;
+      color: white;
+      font-size: 40px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+    }
+    .x { color: #00ffff; }
+    .o { color: #ff6b6b; }
+    button {
+      background: #00ff9d;
+      color: black;
+      border: none;
+      padding: 12px 24px;
+      font-size: 18px;
+      margin: 10px;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+    .message {
+      font-size: 20px;
+      margin: 20px;
+      font-weight: bold;
+      color: #00ff9d;
+    }
+  </style>
+</head>
+<body>
+  <h1>Can You Beat This AI?</h1>
+  <p><strong>No one has won yet.</strong><br>Play as X. If you win, take a screenshot and tag me!</p>
+  <div class="message" id="message">Your Move!</div>
+  <div class="board" id="board">
+    <div class="cell" data-cell></div>
+    <div class="cell" data-cell></div>
+    <div class="cell" data-cell></div>
+    <div class="cell" data-cell></div>
+    <div class="cell" data-cell></div>
+    <div class="cell" data-cell></div>
+    <div class="cell" data-cell></div>
+    <div class="cell" data-cell></div>
+    <div class="cell" data-cell></div>
+  </div>
+  <button id="restart">Restart Game</button>
+
+  <script>
+    const cells = document.querySelectorAll('.cell');
+    const message = document.getElementById('message');
+    const restartButton = document.getElementById('restart');
+    let board = Array(9).fill('');
+    let gameActive = true;
+
+    const winningConditions = [
+      [0,1,2], [3,4,5], [6,7,8],
+      [0,3,6], [1,4,7], [2,5,8],
+      [0,4,8], [2,4,6]
+    ];
+
+    function checkWinner() {
+      for (let condition of winningConditions) {
+        const [a,b,c] = condition;
+        if (board[a] && board[a] === board[b] && board[a] === board[c]) {
+          return board[a];
+        }
+      }
+      return board.includes('') ? null : 'draw';
+    }
+
+    function minimax(board, isMaximizing) {
+      const winner = checkWinner();
+      if (winner === 'X') return -1;
+      if (winner === 'O') return 1;
+      if (winner === 'draw') return 0;
+
+      if (isMaximizing) {
+        let bestScore = -Infinity;
+        for (let i = 0; i < 9; i++) {
+          if (board[i] === '') {
+            board[i] = 'O';
+            const score = minimax(board, false);
+            board[i] = '';
+            bestScore = Math.max(score, bestScore);
+          }
+        }
+        return bestScore;
+      } else {
+        let bestScore = Infinity;
+        for (let i = 0; i < 9; i++) {
+          if (board[i] === '') {
+            board[i] = 'X';
+            const score = minimax(board, true);
+            board[i] = '';
+            bestScore = Math.min(score, bestScore);
+          }
+        }
+        return bestScore;
+      }
+    }
+
+    function bestMove() {
+      if (!gameActive) return;
+
+      let bestScore = -Infinity;
+      let move;
+      for (let i = 0; i < 9; i++) {
+        if (board[i] === '') {
+          board[i] = 'O';
+          const score = minimax(board, false);
+          board[i] = '';
+          if (score > bestScore) {
+            bestScore = score;
+            move = i;
+          }
+        }
+      }
+
+      board[move] = 'O';
+      const cell = cells[move];
+      const o = document.createElement('div');
+      o.textContent = 'O';
+      o.className = 'o';
+      cell.appendChild(o);
+
+      const result = checkWinner();
+      if (result === 'O') {
+        message.textContent = 'AI Wins! No one has beaten it yet.';
+        gameActive = false;
+      } else if (result === 'draw') {
+        message.textContent = "It's a draw! Perfect play.";
+        gameActive = false;
+      } else {
+        message.textContent = "Your move!";
+      }
+    }
+
+    cells.forEach((cell, index) => {
+      cell.addEventListener('click', () => {
+        if (!gameActive || board[index] !== '') return;
+
+        board[index] = 'X';
+        const x = document.createElement('div');
+        x.textContent = 'X';
+        x.className = 'x';
+        cell.appendChild(x);
+
+        const result = checkWinner();
+        if (result === 'X') {
+          message.textContent = 'Wait… YOU WON?! Screenshot and tag me!';
+          gameActive = false;
+        } else if (result === 'draw') {
+          message.textContent = "It's a draw!";
+          gameActive = false;
+        } else {
+          setTimeout(bestMove, 300); // AI move
+        }
+      });
+    });
+
+    restartButton.addEventListener('click', () => {
+      board = Array(9).fill('');
+      gameActive = true;
+      message.textContent = 'Your Move!';
+      cells.forEach(cell => {
+        cell.innerHTML = '';
+      });
+    });
+  </script>
+</body>
+</html>
