@@ -56,6 +56,9 @@
 <body>
   <h1>Can You Beat This AI?</h1>
   <p><strong>No one has won yet.</strong><br>Play as X. If you win, take a screenshot and tag me!</p>
+  <p>
+  📊 <span id="visitor-count">...</span> people have played.
+</p>
   <div class="message" id="message">Your Move!</div>
   <div class="board" id="board">
     <div class="cell" data-cell></div>
@@ -192,5 +195,27 @@
       });
     });
   </script>
+  <!-- Free Visitor Counter -->
+<script>
+  // Increment counter once per session
+  if (!sessionStorage.getItem('viewed')) {
+    fetch('https://api.shrt.fun/api/counter/inc?site=tictactoe-challenge-live', {
+      mode: 'no-cors'
+    });
+    sessionStorage.setItem('viewed', 'yes'); // Only count once per visit
+  }
+
+  // Load and display total count
+  fetch('https://api.shrt.fun/api/counter?site=tictactoe-challenge-live')
+    .then(res => res.json())
+    .then(data => {
+      const count = data.views || 0;
+      document.getElementById('visitor-count').textContent = 
+        new Intl.NumberFormat().format(count);
+    })
+    .catch(() => {
+      document.getElementById('visitor-count').textContent = "Thousands";
+    });
+</script>
 </body>
 </html>
